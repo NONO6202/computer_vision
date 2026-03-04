@@ -56,6 +56,7 @@ while True:
             
     elif key == ord('s'): # 요구사항6: s 키를 누르면 선택한 영역을 이미지 파일로 저장
         if roi_extracted:
+            # 드래그 방향에 상관없이 슬라이싱이 가능하도록 좌표 정렬
             x1, x2 = min(start_x, end_x), max(start_x, end_x)
             y1, y2 = min(start_y, end_y), max(start_y, end_y)
             roi = original_img[y1:y2, x1:x2]

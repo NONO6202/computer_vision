@@ -20,7 +20,7 @@ def select_roi(event, x, y, flags, param):
     # 요구사항3: 사용자가 클릭한 시작점에서 "드래그하여 사각형을 그리며 영역을 선택"
     elif event == cv.EVENT_MOUSEMOVE:
         if drawing:
-            # img = original_img.copy() # 드래그 시 이전 사각형 잔상 제거
+            img = original_img.copy() # 드래그 시 이전 사각형 잔상 제거
             # 함수로 드래그 중인 영역을 시각화
             cv.rectangle(img, (start_x, start_y), (x, y), (0, 255, 0), 2)
             
@@ -57,7 +57,7 @@ while True:
     elif key == ord('s'): # 요구사항6: s 키를 누르면 선택한 영역을 이미지 파일로 저장
         if roi_extracted:
             # 드래그 방향에 상관없이 슬라이싱이 가능하도록 좌표 정렬
-            x1, x2 = min(start_x, end_x), max(start_x, end_x)
+            x1, x2 =  min(start_x, end_x), max(start_x, end_x)
             y1, y2 = min(start_y, end_y), max(start_y, end_y)
             roi = original_img[y1:y2, x1:x2]
             # cv.imwrite()를 사용하여 이미지를 저장

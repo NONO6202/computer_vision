@@ -34,11 +34,18 @@ cv.waitKey(0)
 # 모든 창 닫기
 cv.destroyAllWindows()
 ```
-**변형 & 스케일링**
+- **이미지 로드 및 리사이징**
 
-<img width="681" height="270" alt="image" src="https://github.com/user-attachments/assets/38795041-0c59-4cfe-88df-5ca90c1ee520" />
+`cv.imread()`를 통해 원본 이미지를 BGR로 불러온후 `cv.resize()`를 통해 이미지를 600*400 픽셀로 조정하여 보기 좋게했습니다.
 
-**차원 불일치 주의**
+- **색상 공간 변환**
+
+`cv.cvtColor(img, cv.COLOR_BGR2GRAY)`를 통해 BGR인 3채널 이미지를 Gratscale인 1채널 이미지로 변환했습니다.
+
+- **차원 불일치 주의 및 병합**
+
+컬러 이미지(3차원 배열)와 흑백 이미지(2차원 배열)을 `np.hstack()`을 통해 가로로 이어 붙이려면 두 배열의 차원이 동일해야 합니다.
+`gray_3ch = cv.cvtColor(gray, cv.COLOR_GRAY2BGR)`를 통해 1채널 흑백 이미지를 시각적인 변화 없이 3채널 데이터로 늘린후 병합했습니다.
 
 <img width="768" height="277" alt="무제" src="https://github.com/user-attachments/assets/6cb98829-b540-4220-85e5-647c69ee278e" />
 
@@ -103,6 +110,23 @@ while True:
 # 모든 창 닫기
 cv.destroyAllWindows()
 ```
+- **콜백 함수 등록**
+
+`cv.setMouseCallback('OpenCV2', paint_brush)`를 통해 특정 창에서 발생하는 마우스 이벤트를 paint_brush에 전달합니다.
+
+- **마우스 상태 관리**
+
+글로벌 변수 drawing을 boolean으로 토글하여, 버튼을 누른채로 이동(`EVENT_MOUSEMOVE`) 할 때만 그림이 그려지도록 상태를 제어합니다.
+좌클릭(`EVENT_LBUTTONDOWN`) 파란색, 우클릭(`EVENT_RBUTTONDOWN`) 빨간색으로 색상 변수를 할당했습니다.
+
+- **동시클릭 오류방지**
+
+마우스 좌우 버튼을 동시에 누르거나 떼는 상황에서 발생할 수 있는 연속 그리기 논리 오류를 방지하기 위해 `EVENT_LBUTTONUP` 또는 `EVENT_RBUTTONUP` 발생 시 즉각적으로 drawing 상태를 해제했습니다.
+
+- **실시간 키보드 입력 감지**
+
+`while True` 무한 루프 내에서 `cv.waitKey(1)`을 호출하여 1밀리초마다 키 입력을 확인하여, 
++와 - 키 입력에 따라 brush_size를 1~15 범위 내에서 제한적(`min`, `max` 함수 사용)으로 증감시킵니다.
 
 ---
 
@@ -184,7 +208,23 @@ while True:
 # 모든 창 닫기
 cv.destroyAllWindows()
 ```
-**드래그 시 이전 사각형 중첩으로 잔상 주의**
+- **드래그 잔상 제거**
+
+마우스 를 드래그하는 동안(`EVENT_MOUSEMOVE`) `cv.rectangle`을 반복 호출하면 기존에 그려진 사각형 위에 계속 중첩되어 잔상이 남습니다.
+이를 방지하기 위해 드래그 이벤트가 발생할 때마다 `img = original_img.copy()`를 호출하여 도화지를 초기화 한 후 사각형을 새로 그립니다.
+`img = original_img.copy()`를 누락시 드래그 궤적을 따라 사각형이 누적되는 시각적 결함이 발생합니다.
 
 ![image](https://github.com/user-attachments/assets/df6b61b4-cab9-4f7f-abf0-c848821b7c6f)
 
+- **좌표 정렬**
+
+사용자가 우하단에서 좌상단으로 역방향 드래그를 할 경우, 시작 좌표 값이 종료 좌표 값이 종료 좌표 값보다 커지게 되어 슬라이싱(`img[y1:y2, x1:x2]`)시 에러가 발생하거나 빈 배열이 반환 됩니다.
+이를 해결하기 위해 `min()`과 `max()`함수를 활용하여 항상 x1,y1이 좌상단을 x2,y2가 우하단을 가리키도록 정렬합니다.
+
+**`min()`, `max()`가 없으면:**
+콜백함수가 cv.imshow 줄에서 내부적인 에러를 뱉고 작동을 멈추기 때문에 새로운 ROI 창은 열리지 않습니다.
+하지만 메인 스레드 자체는 오류 없이 살아있으므로 원본 이미지가 있는 창은 닫히지 않고 정상적으로 유지됩니다.
+
+- **상태 제어 및 윈도우 관리**
+
+r 키를 누르면 저장된 ROI를 초기화하고 별도로 생성된 'ROI' 창이 열려있는지 확인(`cv.getWindowProperty`)한 후 닫습니다. s 키 입력 시 `cv.imwrite()`를 통해 슬라이싱 된 배열 데이터를 실제 이미지 파일로 저장합니다.

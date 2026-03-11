@@ -193,8 +193,9 @@ cv2.imwrite(str(output_dir / "04_right_roi.png"), right_vis)
 
 # OpenCV 창을 통해 결과 이미지를 화면에 띄웁니다.
 cv2.imshow("Disparity Map", disparity_color)
-cv2.imshow("Depth Map", depth_color)
 cv2.imshow("Left ROI", left_vis)
+# 스테레오 카메라는 멀리 있는 물체일수록 거리 측정의 정밀도가 급격히 떨어지는 의도 파악을 위해 있는거 같음
+# cv2.imshow("Depth Map", depth_color)
 
 # 임의의 키를 누를 때까지 창을 대기시킵니다.
 cv2.waitKey(0)

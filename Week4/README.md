@@ -168,7 +168,7 @@ SIFT 기술자는 실수형 벡터이므로 `cv.BFMatcher(cv.NORM_L2)`를 사용
 - `BFMatcher + knnMatch()`로 좋은 매칭을 찾고 `cv.findHomography()`로 호모그래피 계산
 - `cv.warpPerspective()`로 `img2`를 `img1` 기준 좌표계로 정렬
 
-<img width="1986" height="625" alt="image" src="https://github.com/user-attachments/assets/f9328829-c82f-4f27-ac83-5f362f40d571" />
+<img width="883" height="1168" alt="image" src="https://github.com/user-attachments/assets/56244623-78a6-4a1d-a813-061279289e02" />
 
 ```03.ImageAlignment.py
 import cv2 as cv

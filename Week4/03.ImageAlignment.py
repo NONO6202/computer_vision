@@ -24,7 +24,7 @@ matcher = cv.BFMatcher(cv.NORM_L2)  # SIFT 기술자에 맞는 L2 거리 기반 
 raw_matches = matcher.knnMatch(left_descriptors, right_descriptors, k=2)  # 각 특징점마다 가장 가까운 후보 두 개를 구해 비율 테스트를 준비한다.
 good_matches = []
 for pair in raw_matches:  # 각 특징점에 대한 최근접 이웃 쌍을 하나씩 순회한다.
-    if len(pair) < 2:  # 최근접 이웃 후보가 두 개보다 적은 경우는 건너뛴다.
+    if len(pair) < 2:  # 최근접 이웃 후보가 두 개보다 적은 경우는 건너닫는다.
         continue
     first_match, second_match = pair  # 첫 번째 후보와 두 번째 후보를 꺼낸다.
     if first_match.distance < 0.75 * second_match.distance:  # Lowe의 거리 비율 테스트로 신뢰할 수 있는 매칭만 고른다.
@@ -59,38 +59,78 @@ panorama_height = max(int(y_max - y_min), max(left_height, right_height))  # 세
 # 요구사항: cv.warpPerspective()를 사용하여 한 이미지를 변환하여 다른 이미지와 정렬
 # 힌트: cv.warpPerspective()를 사용할 때 출력 크기를 두 이미지를 합친 파노라마 크기 (w1+w2, max(h1,h2))로 설정
 warped_image = cv.warpPerspective(right_image, translation_matrix @ homography_matrix, (panorama_width, panorama_height))  # img2를 img1 좌표계 기준 파노라마 캔버스로 변환한다.
-warped_image[translation_y:translation_y + left_height, translation_x:translation_x + left_width] = left_image  # 기준 이미지인 img1을 같은 캔버스 위에 덮어써 정렬 결과를 완성한다.
 
-non_black_mask = cv.cvtColor(warped_image, cv.COLOR_BGR2GRAY) > 0  # 정합 결과에서 실제 이미지가 존재하는 영역만 True로 표시한다.
-non_black_points = np.column_stack(np.where(non_black_mask))  # 검은 여백이 아닌 모든 픽셀의 좌표를 행렬 형태로 모은다.
-if non_black_points.size > 0:  # 실제 이미지 영역이 하나라도 존재하는지 확인한다.
-    top_row, left_col = non_black_points.min(axis=0)  # 유효 영역의 가장 위쪽과 가장 왼쪽 좌표를 계산한다.
-    bottom_row, right_col = non_black_points.max(axis=0)  # 유효 영역의 가장 아래쪽과 가장 오른쪽 좌표를 계산한다.
-    warped_image = warped_image[top_row:bottom_row + 1, left_col:right_col + 1]  # 계산된 경계만 남기도록 검은 여백을 잘라낸다.
+# --- [비교용 1단계: 단순 덮어쓰기 및 크롭] ---
+warped_simple = warped_image.copy()  # 블렌딩 전 상태를 보존하기 위해 복사본을 만든다.
+warped_simple[translation_y:translation_y + left_height, translation_x:translation_x + left_width] = left_image  # 기준 이미지인 img1을 단순하게 덮어쓴다.
 
-matches_mask = inlier_mask.ravel().tolist()  # RANSAC이 정상 대응점으로 인정한 인라이어 여부를 리스트로 변환한다.
-matches_to_draw = good_matches[:80]  # 매칭 선이 너무 많아지지 않도록 상위 80개 좋은 매칭만 시각화에 사용한다.
-mask_to_draw = matches_mask[:80]  # 선택한 매칭 수에 맞춰 인라이어 마스크도 같은 길이로 자른다.
-matching_result = cv.drawMatches(  # 특징점 매칭 결과를 한 장의 이미지로 시각화한다.
-    left_image,  # 기준 이미지인 img1을 전달한다.
-    left_keypoints,  # 기준 이미지의 특징점 목록을 전달한다.
-    right_image,  # 대상 이미지인 img2를 전달한다.
-    right_keypoints,  # 대상 이미지의 특징점 목록을 전달한다.
-    matches_to_draw,  # 좋은 매칭 중 시각화용으로 고른 매칭 목록을 전달한다.
-    None,  # 새로운 결과 이미지를 생성하도록 None을 전달한다.
-    matchesMask=mask_to_draw,  # RANSAC 인라이어로 판별된 매칭만 선으로 표시한다.
-    flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,  # 매칭되지 않은 단독 특징점은 그리지 않도록 설정한다.
+# 단순 덮어쓰기 결과에서 검은 여백 자동 크롭
+mask_simple = cv.cvtColor(warped_simple, cv.COLOR_BGR2GRAY) > 0  # 실제 이미지가 존재하는 영역만 True로 표시한다.
+coords_simple = np.column_stack(np.where(mask_simple))  # 픽셀 좌표를 모은다.
+if coords_simple.size > 0:
+    top_s, left_s = coords_simple.min(axis=0)  # 유효 영역의 경계를 찾는다.
+    bottom_s, right_s = coords_simple.max(axis=0)
+    warped_simple_cropped = warped_simple[top_s:bottom_s + 1, left_s:right_s + 1]  # 검은 여백을 잘라낸다.
+else:
+    warped_simple_cropped = warped_simple  # 이미지 영역이 없으면 원본을 유지한다.
+
+# --- [비교용 2단계: 거리 변환 기반 알파 블렌딩 적용 및 크롭] ---
+warped_blended = warped_image.copy()  # warped_image는 이미 warped_right_corners까지 투시 변환된 상태이다.
+
+left_canvas = np.zeros((panorama_height, panorama_width, 3), dtype=np.uint8)  # 왼쪽 이미지를 캔버스 크기에 맞게 배치할 빈 배열을 만든다.
+left_canvas[translation_y:translation_y + left_height, translation_x:translation_x + left_width] = left_image  # img1을 제자리에 넣는다.
+
+left_mask = np.zeros((panorama_height, panorama_width), dtype=np.uint8)  # 왼쪽 이미지의 유효 영역 마스크를 생성한다.
+left_mask[translation_y:translation_y + left_height, translation_x:translation_x + left_width] = 255  # img1 자리를 흰색으로 칠한다.
+
+right_mask_base = np.full((right_height, right_width), 255, dtype=np.uint8)  # 오른쪽 이미지 원본 크기만큼 255로 채워진 마스크를 만든다.
+right_mask = cv.warpPerspective(right_mask_base, translation_matrix @ homography_matrix, (panorama_width, panorama_height))  # 마스크에도 동일한 투시 변환을 적용한다.
+
+left_dist = cv.distanceTransform(left_mask, cv.DIST_L2, 3)  # 거리 변환을 계산한다.
+right_dist = cv.distanceTransform(right_mask, cv.DIST_L2, 3)
+
+weight_sum = left_dist + right_dist + 1e-6  # 분모가 0이 되는 것을 방지하기 위해 작은 값을 더해 거리 합을 구한다.
+alpha_left = left_dist / weight_sum  # 왼쪽 가중치(0.0~1.0)를 계산한다.
+alpha_right = right_dist / weight_sum  # 오른쪽 가중치(0.0~1.0)를 계산한다.
+
+alpha_left = np.repeat(alpha_left[:, :, np.newaxis], 3, axis=2)  # 컬러 채널과 곱하기 위해 차원을 확장한다.
+alpha_right = np.repeat(alpha_right[:, :, np.newaxis], 3, axis=2)
+
+warped_blended = (left_canvas * alpha_left + warped_blended * alpha_right).astype(np.uint8)  # 가중치를 곱하고 더해서 부드럽게 블렌딩된 파노라마를 만든다.
+
+# 블렌딩 결과에서 검은 여백 자동 크롭
+mask_blended = cv.cvtColor(warped_blended, cv.COLOR_BGR2GRAY) > 0  # 이미지가 존재하는 영역만 True로 표시한다.
+coords_blended = np.column_stack(np.where(mask_blended))  # 좌표를 모은다.
+if coords_blended.size > 0:
+    top_b, left_b = coords_blended.min(axis=0)  # 유효 경계를 찾는다.
+    bottom_b, right_b = coords_blended.max(axis=0)
+    warped_blended_cropped = warped_blended[top_b:bottom_b + 1, left_b:right_b + 1]  # 검은 여백을 잘라낸다.
+else:
+    warped_blended_cropped = warped_blended  # 이미지 영역이 없으면 원본을 유지한다.
+
+# --- [시각화 데이터 준비] ---
+matches_mask = inlier_mask.ravel().tolist()  # RANSAC 인라이어 여부를 리스트로 변환한다.
+matches_to_draw = good_matches[:80]  # 상위 80개 좋은 매칭만 시각화에 사용한다.
+mask_to_draw = matches_mask[:80]  # 동일한 개수로 인라이어 마스크를 자른다.
+matching_result = cv.drawMatches(  # 특징점 매칭 결과를 시각화한다.
+    left_image, left_keypoints, right_image, right_keypoints,
+    matches_to_draw, None, matchesMask=mask_to_draw,
+    flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
 )
 
-rgb_warped_image = cv.cvtColor(warped_image, cv.COLOR_BGR2RGB)  # Matplotlib 표시를 위해 정합 결과 이미지를 RGB로 변환한다.
-rgb_matching_result = cv.cvtColor(matching_result, cv.COLOR_BGR2RGB)  # 매칭 시각화 이미지도 RGB로 변환한다.
+rgb_matching_result = cv.cvtColor(matching_result, cv.COLOR_BGR2RGB)  # RGB로 변환한다.
+rgb_simple_cropped = cv.cvtColor(warped_simple_cropped, cv.COLOR_BGR2RGB)  # RGB로 변환한다.
+rgb_blended_cropped = cv.cvtColor(warped_blended_cropped, cv.COLOR_BGR2RGB)  # RGB로 변환한다.
+
 # 요구사항: 변환된 이미지(Warped Image)와 특징점 매칭 결과(Matching Result)를 나란히 출력
-figure, axes = plt.subplots(1, 2, figsize=(20, 8))  # 정합 결과와 매칭 결과를 나란히 배치할 도화지를 만든다.
-axes[0].imshow(rgb_warped_image)
-axes[0].set_title("Warped Image") 
-axes[1].imshow(rgb_matching_result)
-axes[1].set_title(f"Matching Result ({int(inlier_mask.sum())} inliers)")
+figure, axes = plt.subplots(3, 1, figsize=(9, 12)) 
+axes[0].imshow(rgb_matching_result)
+axes[0].set_title(f"Matching Result ({int(inlier_mask.sum())} inliers)") 
+axes[1].imshow(rgb_simple_cropped)
+axes[1].set_title("Cropped Panorama (Unblended - Harsh boundary)")
+axes[2].imshow(rgb_blended_cropped)
+axes[2].set_title("Cropped Panorama (Blended - Smooth boundary)")
 figure.tight_layout()
 
 plt.show()
-plt.close(figure) 
+plt.close(figure)

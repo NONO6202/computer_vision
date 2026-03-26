@@ -8,7 +8,7 @@
 - `cv.drawKeypoints()`로 특징점의 위치, 크기, 방향을 시각화
 - `Matplotlib`으로 원본 이미지와 결과 이미지를 나란히 출력
 
-사진자리
+<img width="2391" height="485" alt="image" src="https://github.com/user-attachments/assets/c4bec6a7-b391-477f-9d2a-5f7342ac9684" />
 
 ```01.SIFTKeypoints.py
 import cv2 as cv
@@ -84,7 +84,7 @@ plt.close(figure)
 - `BFMatcher`와 `knnMatch()`를 사용해 최근접 이웃을 찾음
 - 거리 비율 테스트로 좋은 매칭만 남긴 뒤 결과를 시각화
 
-사진자리
+<img width="1792" height="301" alt="image" src="https://github.com/user-attachments/assets/a882c8df-9926-4c26-a765-a28651ed1130" />
 
 ```02.SIFTMatching.py
 import cv2 as cv
@@ -168,7 +168,7 @@ SIFT 기술자는 실수형 벡터이므로 `cv.BFMatcher(cv.NORM_L2)`를 사용
 - `BFMatcher + knnMatch()`로 좋은 매칭을 찾고 `cv.findHomography()`로 호모그래피 계산
 - `cv.warpPerspective()`로 `img2`를 `img1` 기준 좌표계로 정렬
 
-사진자리
+<img width="1986" height="625" alt="image" src="https://github.com/user-attachments/assets/f9328829-c82f-4f27-ac83-5f362f40d571" />
 
 ```03.ImageAlignment.py
 import cv2 as cv

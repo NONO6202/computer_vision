@@ -167,6 +167,7 @@ SIFT 기술자는 실수형 벡터이므로 `cv.BFMatcher(cv.NORM_L2)`를 사용
 - `img1.jpg`와 `img2.jpg`에서 SIFT 특징점을 추출
 - `BFMatcher + knnMatch()`로 좋은 매칭을 찾고 `cv.findHomography()`로 호모그래피 계산
 - `cv.warpPerspective()`로 `img2`를 `img1` 기준 좌표계로 정렬
+- `Distance Transform`을 추가해 거리변환을 이용해 경계선에서 멀어질수록 높은 가중치를 줘, 두 이미지가 겹치는 구간을 자연스럽게 합치는 알파 블렌딩을 수행 // 궁금해서 넣음
 
 <img width="883" height="1168" alt="image" src="https://github.com/user-attachments/assets/56244623-78a6-4a1d-a813-061279289e02" />
 
@@ -232,7 +233,7 @@ panorama_height = max(int(y_max - y_min), max(left_height, right_height))  # 세
 # 요구사항: cv.warpPerspective()를 사용하여 한 이미지를 변환하여 다른 이미지와 정렬
 # 힌트: cv.warpPerspective()를 사용할 때 출력 크기를 두 이미지를 합친 파노라마 크기 (w1+w2, max(h1,h2))로 설정
 warped_image = cv.warpPerspective(right_image, translation_matrix @ homography_matrix, (panorama_width, panorama_height))  # img2를 img1 좌표계 기준 파노라마 캔버스로 변환한다.
-warped_image[translation_y:translation_y + left_height, translation_x:translation_x + left_width] = left_image  # 기준 이미지인 img1을 같은 캔버스 위에 덮어써 정렬 결과를 완성한다.
+warped_image[translation_y:translation_y + left_height, translation_x:translation_x + left_width] = left_image  # 기준 이미지인 img1을 같은 캔버스 위에 덮어써 정렬 결과를 완성한다.    
 
 non_black_mask = cv.cvtColor(warped_image, cv.COLOR_BGR2GRAY) > 0  # 정합 결과에서 실제 이미지가 존재하는 영역만 True로 표시한다.
 non_black_points = np.column_stack(np.where(non_black_mask))  # 검은 여백이 아닌 모든 픽셀의 좌표를 행렬 형태로 모은다.

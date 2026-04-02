@@ -42,11 +42,12 @@ model = keras.Sequential(
         layers.Input(shape=(32, 32, 3)),  # CIFAR-10 이미지는 32x32 RGB 이미지이므로 입력 크기를 이에 맞춘다.
         layers.Conv2D(32, (3, 3), activation="relu",),  # 첫 번째 합성곱층에서 저수준 특징을 추출
         layers.MaxPooling2D((2, 2)),  # 공간 해상도를 절반으로 줄여 계산량을 낮추고 중요한 특징만 남김
+
         layers.Conv2D(128, (3, 3), activation="relu",),  # 두 번째 합성곱층에서 더 복잡한 시각 패턴을 학습
         layers.MaxPooling2D((2, 2)), 
+
         layers.Flatten(),  # 합성곱 특징 맵을 1차원 벡터로 펼쳐 Dense 층에 전달
-        layers.Dense(128, activation="relu"),  # 완전연결층에서 분류에 필요한 특징 조합을 학습
-        layers.Dropout(0.1),  # dropout으로 과적합을 완화
+        layers.Dense(64, activation="relu"),  # 완전연결층에서 분류에 필요한 특징 조합을 학습
         layers.Dense(10, activation="softmax"),  # CIFAR-10의 10개 클래스를 확률로 출력
     ]
 )
@@ -62,8 +63,8 @@ optimizer="adam",  # Adam 옵티마이저를 사용
 history = model.fit(
     x_train,
     y_train,
-    epochs=5,  # 5회 반복 학습한다.
-    batch_size=512,  # 한 번에 512장 배치로 묶는다.
+    epochs=10,  # 5회 반복 학습한다.
+    batch_size=256,  # 한 번에 256장 배치로 묶는다.
     validation_split=0.1,  # 학습 데이터의 0.1을 검증용으로 과적합 여부를 확인
 )
 # 학습이 끝난 모델을 테스트 세트에서 평가한다.
@@ -125,7 +126,7 @@ probability_axis.set_ylim(0.0, 1.0)
 figure.suptitle(f"CIFAR-10 CNN Result - Test Accuracy: {test_accuracy:.4f}", fontsize=16)
 figure.tight_layout()
 
-output_path = output_dir / "01_mnist_result.png"
+output_path = output_dir / "02_cifar10_result.png"
 figure.savefig(output_path)
 plt.show()
 plt.close(figure)

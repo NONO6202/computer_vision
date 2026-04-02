@@ -54,7 +54,7 @@ history = model.fit(
     x_train,
     y_train,
     epochs=10,  # 5회 반복 학습한다.
-    batch_size=512,  # 한 번에 512장 배치로 묶는다.
+    batch_size=512,  # 한 번에 1024장 배치로 묶는다.
     validation_split=0.1,  # 학습 데이터의 0.1을 검증용으로 과적합 여부를 확인
 )
 # 학습이 끝난 모델을 테스트 세트에서 평가한다.

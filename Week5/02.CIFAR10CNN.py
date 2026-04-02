@@ -84,14 +84,14 @@ top_indices = np.argsort(dog_probabilities)[::-1][:5]  # 확률이 높은 상위
 top_labels = [class_names[index] for index in top_indices]  # 상위 5개 클래스 번호를 이름으로 변환한다.
 top_probabilities = dog_probabilities[top_indices]  # 상위 5개 클래스의 확률 값만 따로 추린다.
 
-print("CIFAR-10 CNN 학습 결과\n")  # 파일 첫 줄에 제목을 기록한다.
-print(f"- 학습 샘플 수: {len(x_train)}\n")  # 사용한 학습 데이터 개수를 기록한다.
-print(f"- 테스트 샘플 수: {len(x_test)}\n")  # 사용한 테스트 데이터 개수를 기록한다.
-print(f"- 테스트 손실: {test_loss:.4f}\n")  # 테스트 손실 값을 소수점 넷째 자리까지 기록한다.
-print(f"- 테스트 정확도: {test_accuracy:.4f}\n")  # 테스트 정확도를 소수점 넷째 자리까지 기록한다.
-print(f"- dog.jpg 예측 클래스: {predicted_label}\n")  # dog 이미지에 대한 최종 예측 클래스를 기록한다.
-for rank, index in enumerate(top_indices, start=1):  # 상위 5개 예측 클래스를 순위와 함께 순회한다.
-    print(f"  {rank}. {class_names[index]}: {dog_probabilities[index]:.4f}\n")  # 각 클래스 이름과 확률을 파일에 기록한다.
+print("CIFAR-10 CNN 학습 결과\n")
+print(f"- 학습 샘플 수: {len(x_train)}\n")
+print(f"- 테스트 샘플 수: {len(x_test)}\n")
+print(f"- 테스트 손실: {test_loss:.4f}\n")
+print(f"- 테스트 정확도: {test_accuracy:.4f}\n")
+print(f"- dog.jpg 예측 클래스: {predicted_label}\n")
+for rank, index in enumerate(top_indices, start=1):
+    print(f"  {rank}. {class_names[index]}: {dog_probabilities[index]:.4f}\n")
 
 figure = plt.figure(figsize=(18, 10))
 grid = figure.add_gridspec(2, 2) 
@@ -125,7 +125,7 @@ probability_axis.set_ylim(0.0, 1.0)
 figure.suptitle(f"CIFAR-10 CNN Result - Test Accuracy: {test_accuracy:.4f}", fontsize=16)
 figure.tight_layout()
 
-output_path = output_dir / "01_mnist_result.png"  # 최종 시각화 이미지를 저장할 파일 경로를 만든다.
-figure.savefig(output_path)  # 화면에 보이는 결과를 PNG 파일로 저장한다.
-plt.show()  # 사용자가 일반 환경에서 실행했을 때 결과 창이 화면에 나타나도록 한다.
-plt.close(figure)  # 스크립트 종료 전에 figure 자원을 정리한다.
+output_path = output_dir / "01_mnist_result.png"
+figure.savefig(output_path)
+plt.show()
+plt.close(figure)

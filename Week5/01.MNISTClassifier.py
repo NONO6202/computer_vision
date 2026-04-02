@@ -99,7 +99,7 @@ for index in range(sample_count):
 figure.suptitle(f"MNIST Classifier Result - Test Accuracy: {test_accuracy:.4f}", fontsize=16) 
 figure.tight_layout() 
 
-output_path = output_dir / "01_mnist_result.png"  # 최종 시각화 이미지를 저장할 파일 경로를 만든다.
-figure.savefig(output_path)  # 화면에 보이는 결과를 PNG 파일로 저장한다.
-plt.show()  # 사용자가 일반 환경에서 실행했을 때 결과 창이 화면에 나타나도록 한다.
-plt.close(figure)  # 스크립트 종료 전에 figure 자원을 정리한다.
+output_path = output_dir / "01_mnist_result.png"
+figure.savefig(output_path)
+plt.show()
+plt.close(figure)

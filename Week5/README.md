@@ -17,7 +17,7 @@
 import os
 from pathlib import Path
 
-# 현재 로컬 환경에서는 TensorFlow가 비정상 종료되어 Keras torch 백엔드를 사용한다.
+# 현재 로컬 환경에서는 TensorFlow가 비정상 종료되어 Keras torch 백엔드를 사용
 os.environ.setdefault("KERAS_BACKEND", "torch") 
 
 import keras
@@ -35,7 +35,7 @@ output_dir.mkdir(parents=True, exist_ok=True)
 (x_train, y_train), (x_test, y_test) = mnist.load_data()  # MNIST 학습 세트와 테스트 세트를 메모리로 불러온다.
 
 dataset_len = int(len(x_train) / 10)
-# train, test dataset을 분류한다.
+# 요구사항: 데이터를 훈련 세트와 테스트 세트로 분할
 train_limit =  dataset_len * 9 
 test_limit = dataset_len
 x_train = x_train[:train_limit].astype("float32") / 255.0  # 픽셀 값을 0~1 범위로 정규화해 학습이 안정되도록 만든다.
@@ -44,9 +44,11 @@ x_test = x_test[:test_limit].astype("float32") / 255.0
 y_test = y_test[:test_limit] 
 
 # 요구사항: 간단한 신경망 모델을 구축
+# 힌트: Sequential 모델과 Dense 레이어를 활용하여 신경망을 구성
 # PDF의 힌트에 맞춰 Sequential 기반 완전연결 신경망을 구성한다.
 model = keras.Sequential(
     [
+        # 힌트:  손글씨 숫자 이미지는 28x28 픽셀 크기의 흑백 이미지
         layers.Input(shape=(28, 28)),  # 손글씨 숫자 이미지는 28x28 흑백 이미지이므로 입력 크기를 이에 맞춤
         layers.Flatten(),  # 2차원 이미지를 1차원 벡터로 펼쳐 Dense 레이어에 전달할 수 있게 만듦
         layers.Dense(256, activation="relu"),  # 첫 번째 은닉층에서 비선형 특징을 학습
@@ -113,11 +115,10 @@ for index in range(sample_count):
 figure.suptitle(f"MNIST Classifier Result - Test Accuracy: {test_accuracy:.4f}", fontsize=16) 
 figure.tight_layout() 
 
-output_path = output_dir / "01_mnist_result.png"  # 최종 시각화 이미지를 저장할 파일 경로를 만든다.
-figure.savefig(output_path)  # 화면에 보이는 결과를 PNG 파일로 저장한다.
-plt.show()  # 사용자가 일반 환경에서 실행했을 때 결과 창이 화면에 나타나도록 한다.
-plt.close(figure)  # 스크립트 종료 전에 figure 자원을 정리한다.
-
+output_path = output_dir / "01_mnist_result.png"
+figure.savefig(output_path)
+plt.show()
+plt.close(figure)
 ```
 
 - **MNIST 데이터 전처리**
@@ -205,7 +206,7 @@ optimizer="adam",  # Adam 옵티마이저를 사용
 history = model.fit(
     x_train,
     y_train,
-    epochs=6,  # 5회 반복 학습한다.
+    epochs=5,  # 5회 반복 학습한다.
     batch_size=512,  # 한 번에 512장 배치로 묶는다.
     validation_split=0.1,  # 학습 데이터의 0.1을 검증용으로 과적합 여부를 확인
 )
@@ -227,14 +228,14 @@ top_indices = np.argsort(dog_probabilities)[::-1][:5]  # 확률이 높은 상위
 top_labels = [class_names[index] for index in top_indices]  # 상위 5개 클래스 번호를 이름으로 변환한다.
 top_probabilities = dog_probabilities[top_indices]  # 상위 5개 클래스의 확률 값만 따로 추린다.
 
-print("CIFAR-10 CNN 학습 결과\n")  # 파일 첫 줄에 제목을 기록한다.
-print(f"- 학습 샘플 수: {len(x_train)}\n")  # 사용한 학습 데이터 개수를 기록한다.
-print(f"- 테스트 샘플 수: {len(x_test)}\n")  # 사용한 테스트 데이터 개수를 기록한다.
-print(f"- 테스트 손실: {test_loss:.4f}\n")  # 테스트 손실 값을 소수점 넷째 자리까지 기록한다.
-print(f"- 테스트 정확도: {test_accuracy:.4f}\n")  # 테스트 정확도를 소수점 넷째 자리까지 기록한다.
-print(f"- dog.jpg 예측 클래스: {predicted_label}\n")  # dog 이미지에 대한 최종 예측 클래스를 기록한다.
-for rank, index in enumerate(top_indices, start=1):  # 상위 5개 예측 클래스를 순위와 함께 순회한다.
-    print(f"  {rank}. {class_names[index]}: {dog_probabilities[index]:.4f}\n")  # 각 클래스 이름과 확률을 파일에 기록한다.
+print("CIFAR-10 CNN 학습 결과\n")
+print(f"- 학습 샘플 수: {len(x_train)}\n")
+print(f"- 테스트 샘플 수: {len(x_test)}\n")
+print(f"- 테스트 손실: {test_loss:.4f}\n")
+print(f"- 테스트 정확도: {test_accuracy:.4f}\n")
+print(f"- dog.jpg 예측 클래스: {predicted_label}\n")
+for rank, index in enumerate(top_indices, start=1):
+    print(f"  {rank}. {class_names[index]}: {dog_probabilities[index]:.4f}\n")
 
 figure = plt.figure(figsize=(18, 10))
 grid = figure.add_gridspec(2, 2) 
@@ -268,10 +269,10 @@ probability_axis.set_ylim(0.0, 1.0)
 figure.suptitle(f"CIFAR-10 CNN Result - Test Accuracy: {test_accuracy:.4f}", fontsize=16)
 figure.tight_layout()
 
-output_path = output_dir / "01_mnist_result.png"  # 최종 시각화 이미지를 저장할 파일 경로를 만든다.
-figure.savefig(output_path)  # 화면에 보이는 결과를 PNG 파일로 저장한다.
-plt.show()  # 사용자가 일반 환경에서 실행했을 때 결과 창이 화면에 나타나도록 한다.
-plt.close(figure)  # 스크립트 종료 전에 figure 자원을 정리한다.
+output_path = output_dir / "01_mnist_result.png"
+figure.savefig(output_path)
+plt.show()
+plt.close(figure)
 ```
 
 - **CIFAR-10 정규화**

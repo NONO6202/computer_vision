@@ -10,6 +10,8 @@
 - 검출된 경계상자를 입력으로 받아 SORT 방식으로 객체를 추적
 - 각 객체에 고유 ID를 부여하고 비디오 프레임 위에 실시간으로 표시
 
+![01_sort_tracking](https://github.com/user-attachments/assets/6a0c5cbb-dd87-4fc5-ba58-4ef791c67dfb)
+
 ```01.SORTTracking.py
 from pathlib import Path
 
@@ -302,6 +304,8 @@ if __name__ == "__main__":
 - OpenCV를 사용해 MP4 입력 영상을 읽음
 - 검출된 얼굴 랜드마크 468개를 점으로 표시
 - `ESC` 키를 누르면 프로그램 종료
+
+![02_facemesh_video](https://github.com/user-attachments/assets/0d3de934-8f0e-4262-92ec-235d70cb1fd4)
 
 ```02.FaceMesh.py
 # 요구사항: OpenCV를 사용하여 웹캠으로부터 실시간 영상을 캡처합니다.
